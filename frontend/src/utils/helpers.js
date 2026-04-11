@@ -11,14 +11,9 @@ export const formatFecha = (fecha) => {
 }
 
 export const tiposFormato = [
-  'Comparación visual ⚖️',
-  'Tutorial 📚',
+  'Descubre el error 🔎',
   'Dato sorprendente 🤯',
-  'Situación similar 😅',
-  'Tip de tecnología 💡',
-  'Noticias 📰',
-  'Humor 😂',
-  'Pregunta 🤔',
-  'Anuncio 📣',
-  'Otro'
+  'Comparación ⚖️',
+  'Situación relatable 😅',
+  'Mini guía 📚',
 ]

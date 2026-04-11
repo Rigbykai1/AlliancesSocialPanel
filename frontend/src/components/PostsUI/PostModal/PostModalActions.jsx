@@ -40,10 +40,10 @@ const PostModalActions = ({
     }
 
     return (
-        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end w-full">
+        <div className="flex gap-3 justify-center sm:justify-end w-full">
             <div className="tooltip" data-tip="Editar post">
                 <button
-                    className="btn btn-outline hover:btn-primary w-full sm:w-auto"
+                    className="btn btn-outline hover:btn-primary"
                     onClick={onEdit}
                 >
                     <PiNotePencil />
@@ -53,7 +53,7 @@ const PostModalActions = ({
 
             <div className="tooltip" data-tip="Eliminar post">
                 <button
-                    className="btn btn-outline hover:btn-error w-full sm:w-auto"
+                    className="btn btn-outline hover:btn-error"
                     onClick={onDelete}
                 >
                     <PiTrash />
@@ -63,7 +63,7 @@ const PostModalActions = ({
 
             <div className="tooltip" data-tip="Cerrar modal">
                 <button
-                    className="btn btn-outline w-full sm:w-auto"
+                    className="btn btn-outline"
                     onClick={onClose}
                 >
                     <PiX />

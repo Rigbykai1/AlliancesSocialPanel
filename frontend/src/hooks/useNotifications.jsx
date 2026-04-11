@@ -49,10 +49,10 @@ export const NotificationProvider = ({ children }) => {
         setNotifications(prev => [newNotif, ...prev]);
     }, []);
 
-    const notifyInfo    = useCallback((msg) => notify(msg, "info"),    [notify]);
+    const notifyInfo = useCallback((msg) => notify(msg, "info"), [notify]);
     const notifySuccess = useCallback((msg) => notify(msg, "success"), [notify]);
     const notifyWarning = useCallback((msg) => notify(msg, "warning"), [notify]);
-    const notifyError   = useCallback((msg) => notify(msg, "error"),   [notify]);
+    const notifyError = useCallback((msg) => notify(msg, "error"), [notify]);
 
     const markRead = useCallback((id) => {
         setNotifications(prev =>

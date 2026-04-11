@@ -72,19 +72,18 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                 {/* Columna izquierda */}
-                <div className="space-y-5">
+                <div className="flex flex-col space-y-5 items-center">
 
                     {/* Datos básicos */}
-                    <div className="card bg-base-200 border border-base-300 shadow-sm max-w-md">
+                    <div className="card bg-base-200 border border-base-300 shadow-sm w-full md:max-w-md">
                         <div className="card-body gap-4 p-5">
                             <h3 className="font-semibold text-base flex items-center gap-2">
                                 <PiNotePencil className="size-5" />
                                 Datos básicos
                             </h3>
-
                             <label className="form-control w-full">
                                 <div className="label">
                                     <span className="label-text font-medium">Fecha de publicación</span>
@@ -113,7 +112,7 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                                 </select>
                             </label>
 
-                            <label className="label cursor-pointer justify-start gap-3 rounded-xl border border-base-300 bg-base-100 px-4 py-3">
+                            <label className="label cursor-pointer justify-start gap-3 rounded-xl border border-base-300 bg-base-100 px-4 py-3 w-full">
                                 <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary"
@@ -128,7 +127,7 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                     </div>
 
                     {/* Imagen */}
-                    <div className="card bg-base-200 border border-base-300 shadow-sm max-w-md">
+                    <div className="card bg-base-200 border border-base-300 shadow-sm w-full md:max-w-md">
                         <div className="card-body gap-4 p-5">
                             <h3 className="font-semibold text-base flex items-center gap-2">
                                 <PiImageSquare className="size-5" />

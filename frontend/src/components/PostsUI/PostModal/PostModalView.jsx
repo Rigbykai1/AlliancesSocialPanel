@@ -13,7 +13,7 @@ const PostModalView = ({ post }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {/* Imagen + metadata */}
                 <div className="card bg-base-200 border border-base-300 shadow-sm overflow-hidden">

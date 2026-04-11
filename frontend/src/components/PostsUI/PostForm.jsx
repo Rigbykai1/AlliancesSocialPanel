@@ -106,16 +106,14 @@ export default function PostForm({ onSubmit }) {
       <div className="card bg-base-200 shadow-lg border border-base-300 overflow-hidden">
         <div className="card-body p-6 md:p-8">
           <header className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 className="text-2xl font-bold">Crear Nuevo Post</h2>
-            <p className="text-sm text-base-content/60">Publica contenido atractivo y visual</p>
+            <h2 className="text-2xl font-bold text-center sm:text-start">Crear Nuevo Post</h2>
           </header>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
             {/* Columna izquierda: metadatos */}
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <label className="w-1/2">
+            <div className='flex flex-col gap-3'>
+              <div className="flex flex-col sm:flex-row gap-3">
+
+                <label className="flex flex-col w-full sm:w-1/2 items-center sm:items-start">
                   <span className="label-text font-semibold">📅 Fecha</span>
                   <input
                     type="date"
@@ -123,18 +121,18 @@ export default function PostForm({ onSubmit }) {
                     value={formData.fecha}
                     onChange={handleChange}
                     required
-                    className="input input-bordered w-full mt-2 focus:outline-none"
+                    className="input input-bordered mt-2 focus:outline-none text-center"
                     aria-label="Fecha de publicación"
                   />
                 </label>
 
-                <label className="w-1/2">
+                <label className="flex flex-col w-full sm:w-1/2 items-center sm:items-start">
                   <span className="label-text font-semibold">🎨 Formato</span>
                   <select
                     name="tipo"
                     value={formData.tipo}
                     onChange={handleChange}
-                    className="select select-bordered w-full mt-2 focus:outline-none"
+                    className="select select-bordered mt-2 focus:outline-none text-center"
                     aria-label="Tipo de formato"
                   >
                     {tiposFormato.map(tipo => (
@@ -142,37 +140,57 @@ export default function PostForm({ onSubmit }) {
                     ))}
                   </select>
                 </label>
+
               </div>
 
               {/* Sección imagen rediseñada */}
-              <div className="space-y-3">
+              <div className='flex flex-col gap-3 items-center md:items-start'>
                 <span className="label-text font-semibold">🖼 Imagen</span>
-
                 {/* Área de preview */}
                 <div
-                  className={`relative rounded-xl bg-base-100 overflow-hidden transition-all cursor-pointer
+                  className={`flex flex-col w-60 md:max-w-full relative rounded-xl bg-base-100 overflow-hidden transition-all
                     ${previewUrl
-                      ? 'border border-base-300'
-                      : 'border-2 border-dashed border-base-300 hover:border-primary/40'
+                      ? 'border border-base-300 cursor-default'
+                      : 'border-2 border-dashed border-base-300 hover:border-primary/40 cursor-pointer'
                     }`}
                   onClick={() => !previewUrl && fileInputRef.current?.click()}
                 >
                   {previewUrl ? (
-                    <>
+                    <div className="flex flex-col items-center">
                       <img
                         src={previewUrl}
                         alt="Vista previa"
                         className="w-full max-h-48 object-contain p-2"
                       />
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleRemoveImage() }}
-                        className="btn btn-xs btn-circle btn-ghost absolute top-2 right-2 bg-base-100 border border-base-300"
-                        aria-label="Quitar imagen"
-                      >
-                        ✕
-                      </button>
-                    </>
+                      {/* Nombre del archivo seleccionado */}
+                      {formData.imagen && (
+                        <p className="text-xs text-base-content/50 overflow-hidden whitespace-nowrap text-ellipsis max-w-44">
+                          {formData.imagen.name}
+                        </p>
+                      )}
+                      {/* Botones de acción cuando hay imagen */}
+                      {formData.imagen && (
+                        <div className="flex gap-2 justify-center py-2">
+                          <label className="btn btn-outline btn-sm cursor-pointer">
+                            Cambiar imagen
+                            <input
+                              ref={changeInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="btn btn-error btn-sm"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-2 py-8 text-base-content/40">
                       <PiImageSquare className="size-8" />
@@ -191,36 +209,6 @@ export default function PostForm({ onSubmit }) {
                   className="hidden"
                   aria-label="Subir imagen"
                 />
-
-                {/* Botones de acción cuando hay imagen */}
-                {formData.imagen && (
-                  <div className="flex gap-2">
-                    <label className="btn btn-outline btn-sm flex-1 cursor-pointer">
-                      Cambiar imagen
-                      <input
-                        ref={changeInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="btn btn-ghost btn-sm"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                )}
-
-                {/* Nombre del archivo seleccionado */}
-                {formData.imagen && (
-                  <p className="text-xs text-base-content/50 truncate">
-                    {formData.imagen.name}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -245,15 +233,17 @@ export default function PostForm({ onSubmit }) {
           </div>
 
           {/* Acciones */}
-          <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="mt-6 flex flex-col md:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-sm text-base-content/50">
-              <strong>Consejo</strong>: usa imágenes en formato JPG o PNG y mantén el tamaño por debajo de 5 MB.
+              <p className='max-w-sm'>
+                <strong>Consejo</strong>: usa imágenes en formato JPG o PNG y mantén el tamaño por debajo de 5 MB.
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <button type="submit" className="btn btn-primary">
                 Crear Post
               </button>
-              <button type="button" className="btn btn-ghost" onClick={handleReset}>
+              <button type="button" className="btn btn-outline" onClick={handleReset}>
                 Limpiar
               </button>
             </div>
