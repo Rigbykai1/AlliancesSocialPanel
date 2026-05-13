@@ -1,52 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { PiNotePencil, PiImageSquare, PiCheckCircle } from "react-icons/pi"
+import React from 'react'
+import { PiNotePencil, PiCheckCircle } from 'react-icons/pi'
 import { tiposFormato } from '../../../utils/helpers'
-
-
-const formatDateLabel = (fechaStr) => {
-    if (!fechaStr) return ""
-    return new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-    })
-}
+import { formatDateLabel } from '../../../utils/date'
+import ImageUploadPreview from '../../UI/ImageUploadPreview'
 
 const PostModalEdit = ({ fields, onChange, postNombre }) => {
-    const [previewUrl, setPreviewUrl] = useState(null)
-    const fileInputRef = useRef(null)
-    const changeInputRef = useRef(null)
     const { fecha, tipo, publicado, contenido, imagen } = fields
 
     const set = (key) => (e) => {
-        const value = e.target.type === 'checkbox' ? e.target.checked
-            : e.target.type === 'file' ? (e.target.files?.[0] || null)
-                : e.target.value
+        const value = e.target.type === 'checkbox'
+            ? e.target.checked
+            : e.target.value
         onChange(prev => ({ ...prev, [key]: value }))
     }
 
-    const handleImageChange = (e) => {
-        const file = e.target.files?.[0] ?? null
-        if (previewUrl) URL.revokeObjectURL(previewUrl)
-        if (file) {
-            setPreviewUrl(URL.createObjectURL(file))
-        } else {
-            setPreviewUrl(null)
-        }
+    const handleImageChange = (file) => {
         onChange(prev => ({ ...prev, imagen: file }))
     }
-
-    const handleRemoveImage = () => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl)
-        setPreviewUrl(null)
-        onChange(prev => ({ ...prev, imagen: null }))
-        if (fileInputRef.current) fileInputRef.current.value = ''
-        if (changeInputRef.current) changeInputRef.current.value = ''
-    }
-
-    useEffect(() => {
-        return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
-    }, [previewUrl])
 
     const handlePublicado = (e) => {
         onChange(prev => ({ ...prev, publicado: e.target.checked }))
@@ -113,7 +83,7 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                             </label>
 
                             <label className="label cursor-pointer justify-start gap-3 rounded-xl border border-base-300 bg-base-100 px-4 py-3 w-full">
-                                <input
+                                <input  
                                     type="checkbox"
                                     className="checkbox checkbox-primary"
                                     checked={!!publicado}
@@ -130,75 +100,13 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                     <div className="card bg-base-200 border border-base-300 shadow-sm w-full md:max-w-md">
                         <div className="card-body gap-4 p-5">
                             <h3 className="font-semibold text-base flex items-center gap-2">
-                                <PiImageSquare className="size-5" />
                                 Imagen
                             </h3>
-
-                            {/* Área de preview clickeable */}
-                            <div
-                                className={`relative rounded-xl bg-base-100 overflow-hidden transition-all
-                                    ${previewUrl
-                                        ? 'border border-base-300'
-                                        : 'border-2 border-dashed border-base-300 hover:border-primary/40 cursor-pointer'
-                                    }`}
-                                onClick={() => !previewUrl && fileInputRef.current?.click()}
-                            >
-                                {previewUrl ? (
-                                    <>
-                                        <img
-                                            src={previewUrl}
-                                            alt="Vista previa"
-                                            className="w-full max-h-48 object-contain p-2"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); handleRemoveImage() }}
-                                            className="btn btn-xs btn-circle btn-ghost absolute top-2 right-2 bg-base-100 border border-base-300"
-                                            aria-label="Quitar imagen"
-                                        >
-                                            ✕
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center gap-2 py-8 text-base-content/40">
-                                        <PiImageSquare className="size-8" />
-                                        <p className="text-sm">Haz clic para subir una imagen</p>
-                                        <p className="text-xs">JPG, PNG · máx. 5 MB</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Input oculto (para el placeholder clickeable) */}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
+                            <ImageUploadPreview
+                                image={imagen}
                                 onChange={handleImageChange}
+                                label="Imagen"
                             />
-
-                            {/* Botones cuando hay imagen */}
-                            {imagen && (
-                                <div className="flex gap-2">
-                                    <label className="btn btn-outline btn-sm flex-1 cursor-pointer">
-                                        Cambiar imagen
-                                        <input
-                                            ref={changeInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    <button
-                                        type="button"
-                                        onClick={handleRemoveImage}
-                                        className="btn btn-ghost btn-sm"
-                                    >
-                                        Eliminar
-                                    </button>
-                                </div>
-                            )}
 
                             {/* Nombre generado */}
                             {imagen && previewFileName() && (

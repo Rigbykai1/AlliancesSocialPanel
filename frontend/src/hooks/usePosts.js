@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react'
 import { postsApi } from '../services/api'
-
-// Helpers
-const formatDateLabel = (fechaStr) => {
-  if (!fechaStr) return ''
-  return new Date(fechaStr + 'T00:00:00').toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  })
-}
+import { formatDateLabel } from '../utils/date'
 
 const getIndicePorFecha = (posts, fecha, excludeId = null) => {
   return posts.filter(p => {

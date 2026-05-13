@@ -51,7 +51,6 @@ const PostCard = ({ post, onClick }) => {
                             </div>
                         </div>
                     </div>
-
                 </div>
             </figure>
 

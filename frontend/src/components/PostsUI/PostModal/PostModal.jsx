@@ -5,7 +5,7 @@ import PostModalEdit from './PostModalEdit'
 import PostModalDeleteConfirm from './PostModalDeleteConfirm'
 import PostModalActions from './PostModalActions'
 
-const PostModalIndex = ({ post, onClose, onDelete, onUpdate }) => {
+const PostModal = ({ post, onClose, onDelete, onUpdate, onTogglePublished }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
     const { notifySuccess, notifyError } = useNotifications()
@@ -87,6 +87,8 @@ const PostModalIndex = ({ post, onClose, onDelete, onUpdate }) => {
                         onCancelDelete={() => setIsConfirmingDelete(false)}
                         onConfirmDelete={handleConfirmDelete}
                         onClose={onClose}
+                        onTogglePublished={onTogglePublished}
+                        post={post}
                     />
                 </div>
             </div>
@@ -94,4 +96,4 @@ const PostModalIndex = ({ post, onClose, onDelete, onUpdate }) => {
     )
 }
 
-export default PostModalIndex
+export default PostModal

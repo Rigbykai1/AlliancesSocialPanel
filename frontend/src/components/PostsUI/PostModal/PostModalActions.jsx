@@ -1,4 +1,4 @@
-import { PiX, PiTrash, PiNotePencil } from "react-icons/pi"
+import { PiX, PiTrash, PiNotePencil, PiMetaLogo, PiCheckCircle, PiCircle } from "react-icons/pi"
 
 const PostModalActions = ({
     isEditing,
@@ -9,8 +9,11 @@ const PostModalActions = ({
     onDelete,
     onCancelDelete,
     onConfirmDelete,
-    onClose
+    onClose,
+    onTogglePublished,
+    post,
 }) => {
+    const isPublished = post && (post['Publicado'] === true || post['Publicado'] === 'true' || post['Publicado'] === '1' || post['Publicado'] === 1)
 
     if (isConfirmingDelete) {
         return (
@@ -40,7 +43,17 @@ const PostModalActions = ({
     }
 
     return (
-        <div className="flex gap-3 justify-center sm:justify-end w-full">
+        <div className="flex gap-3 justify-center sm:justify-end w-full flex-wrap">
+            <div className="tooltip" data-tip={isPublished ? 'Marcar como pendiente' : 'Marcar como publicado'}>
+                <button
+                    className={`btn btn-outline ${isPublished ? 'btn-success' : 'btn-warning'}`}
+                    onClick={() => onTogglePublished?.(post)}
+                >
+                    {isPublished ? <PiCheckCircle /> : <PiCircle />}
+                    {isPublished ? 'Publicado' : 'Pendiente'}
+                </button>
+            </div>
+
             <div className="tooltip" data-tip="Editar post">
                 <button
                     className="btn btn-outline hover:btn-primary"

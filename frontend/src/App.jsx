@@ -1,18 +1,17 @@
-import { useState } from 'react'
+// App.jsx
 import './App.css'
 import NavBar from './components/UI/NavBar'
 import MainContent from './components/UI/MainContent'
 import DrawerSidebar from './components/UI/DrawerSidebar'
 import { usePosts, usePostActions } from './hooks/usePosts'
 import { useNotifications } from './hooks/useNotifications'
+import { useNavigation } from './hooks/useNavigation'
 
 function App() {
-  const [view, setView] = useState('list')
-  const [selectedPost, setSelectedPost] = useState(null)
+  const { view, selectedPost, navigationOptions, navigate, setView } = useNavigation('list')
 
   const { notifyError } = useNotifications()
 
-  // 👇 usePosts recibe notifyError como callback — se llama automáticamente en cada error
   const { posts, loading, error, cargarPosts, setError } = usePosts(notifyError)
 
   const { handleCreatePost, handleDeletePost, handleUpdatePost } = usePostActions(
@@ -21,30 +20,28 @@ function App() {
       setError(msg)
       notifyError(msg)
     },
-    posts  // 👈 esto es todo
+    posts
   )
 
   const handleViewPost = (post) => {
-    setSelectedPost(post)
-    setView('detail')
+    navigate('detail', post)
   }
 
   const handleCreatePostWithView = async (datos) => {
     const result = await handleCreatePost(datos)
-    setView('list')
-    return result  // 👈 propaga { exito, id, imagen } hasta PostForm
+    navigate('list')
+    return result
   }
 
   const handleDeletePostWithView = async (id) => {
     await handleDeletePost(id)
-    setView('list')
+    navigate('list')
   }
 
   return (
     <div className="drawer min-h-screen">
       <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
-      <NavBar setView={setView} />
-
+      <NavBar onNavigate={navigate} />
       <div className="drawer-content flex flex-col">
         <main className="p-4 w-full pt-20">
           <MainContent
@@ -61,14 +58,15 @@ function App() {
               setError(msg)
               notifyError(msg)
             }}
-            onCloseDetail={() => setView('list')}
+            onNavigate={navigate}
+            navigationOptions={navigationOptions}
           />
         </main>
       </div>
 
       <DrawerSidebar
         totalPosts={posts.length}
-        onNavigate={setView}
+        onNavigate={navigate}
       />
     </div>
   )

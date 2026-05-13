@@ -2,7 +2,7 @@ import { PiSidebarLight } from "react-icons/pi";
 import NotificationBell from "./NotificationBell";
 import { ThemeSelector } from "./ThemeSelector";
 
-const NavBar = ({ setView }) => {
+const NavBar = ({ onNavigate }) => {
     return (
         <nav className="navbar fixed top-4 left-1/2 -translate-x-1/2 
                 bg-base-200 rounded-box shadow-lg px-3 z-50 w-[calc(100%-1rem)]">
@@ -17,7 +17,7 @@ const NavBar = ({ setView }) => {
             </div>
 
             <div className="navbar-center">
-                <div className="btn btn-ghost font-bold text-lg" onClick={() => setView('list')}>
+                <div className="btn btn-ghost font-bold text-lg" onClick={() => onNavigate('list')}>
                     Panel
                 </div>
             </div>

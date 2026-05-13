@@ -1,60 +1,58 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { PiImageSquare } from 'react-icons/pi'
-import { tiposFormato } from '../../utils/helpers'
+import React, { useEffect, useState } from 'react'
+import { tiposFormato, DEFAULT_TIPO_FORMATO } from '../../utils/helpers'
+import { getTodayInputValue } from '../../utils/date'
 import { useNotifications } from '../../hooks/useNotifications'
+import ImageUploadPreview from '../UI/ImageUploadPreview'
 
-export default function PostForm({ onSubmit }) {
+export default function PostForm({ onSubmit, initialFecha, initialContenido = '', initialImageUrl = '' }) {
   const [formData, setFormData] = useState({
     titulo: '',
-    fecha: new Date().toISOString().split('T')[0],
-    tipo: 'Comparación visual ⚖️',
-    contenido: '',
-    imagen: null
+    temaIA: '',
+    fecha: initialFecha || getTodayInputValue(),
+    tipo: DEFAULT_TIPO_FORMATO,
+    contenido: initialContenido,
+    imagen: null,
+    imagenUrl: initialImageUrl
   })
-  const [previewUrl, setPreviewUrl] = useState(null)
-  const fileInputRef = useRef(null)
-  const changeInputRef = useRef(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(initialImageUrl || null)
+  const [cargando, setCargando] = useState(false)
   const { notifySuccess, notifyError } = useNotifications()
+
+  useEffect(() => {
+    setFormData(() => ({
+      titulo: '',
+      temaIA: '',
+      fecha: initialFecha || getTodayInputValue(),
+      tipo: DEFAULT_TIPO_FORMATO,
+      contenido: initialContenido || '',
+      imagen: null,
+      imagenUrl: initialImageUrl || ''
+    }))
+    setImagePreviewUrl(initialImageUrl || null)
+  }, [initialFecha, initialContenido, initialImageUrl])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0] ?? null
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(null)
-    }
+  const handleImageChange = (file) => {
+    setFormData(prev => ({ ...prev, imagen: file, imagenUrl: file ? '' : prev.imagenUrl }))
     if (file) {
-      setPreviewUrl(URL.createObjectURL(file))
-      setFormData(prev => ({ ...prev, imagen: file }))
-    } else {
-      setFormData(prev => ({ ...prev, imagen: null }))
+      setImagePreviewUrl(null)
     }
   }
 
   const handleRemoveImage = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(null)
-    }
-    setFormData(prev => ({ ...prev, imagen: null }))
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    if (changeInputRef.current) changeInputRef.current.value = ''
+    setFormData(prev => ({ ...prev, imagen: null, imagenUrl: '' }))
+    setImagePreviewUrl(null)
   }
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-    }
-  }, [previewUrl])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
     if (!formData.fecha || !formData.contenido) {
-      notifyError('Por favor completa los campos requeridos')
+      notifyError('Por favor completa los campos requeridos (fecha y contenido)')
       return
     }
 
@@ -63,7 +61,11 @@ export default function PostForm({ onSubmit }) {
     form.append('fecha', formData.fecha)
     form.append('tipo', formData.tipo)
     form.append('contenido', formData.contenido)
-    if (formData.imagen) form.append('imagen', formData.imagen)
+    if (formData.imagen) {
+      form.append('imagen', formData.imagen)
+    } else if (formData.imagenUrl) {
+      form.append('imagenUrl', formData.imagenUrl)
+    }
 
     try {
       const result = await onSubmit(form)
@@ -71,16 +73,14 @@ export default function PostForm({ onSubmit }) {
       notifySuccess(`Post ${label} creado correctamente`)
       setFormData({
         titulo: '',
-        fecha: new Date().toISOString().split('T')[0],
-        tipo: 'Comparación visual ⚖️',
+        temaIA: '',
+        fecha: null,
+        tipo: DEFAULT_TIPO_FORMATO,
         contenido: '',
-        imagen: null
+        imagen: null,
+        imagenUrl: ''
       })
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
-        setPreviewUrl(null)
-      }
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      setImagePreviewUrl(null)
     } catch (err) {
       notifyError('Error al crear el post: ' + (err?.message || 'Error desconocido'))
     }
@@ -89,16 +89,14 @@ export default function PostForm({ onSubmit }) {
   const handleReset = () => {
     setFormData({
       titulo: '',
-      fecha: new Date().toISOString().split('T')[0],
-      tipo: 'Comparación visual ⚖️',
+      temaIA: '',
+      fecha: '0000-00-00',
+      tipo: DEFAULT_TIPO_FORMATO,
       contenido: '',
-      imagen: null
+      imagen: null,
+      imagenUrl: ''
     })
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(null)
-    }
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    setImagePreviewUrl(null)
   }
 
   return (
@@ -108,11 +106,11 @@ export default function PostForm({ onSubmit }) {
           <header className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 className="text-2xl font-bold text-center sm:text-start">Crear Nuevo Post</h2>
           </header>
+          <div className="divider my-4">📝 Detalles del Post</div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Columna izquierda: metadatos */}
             <div className='flex flex-col gap-3'>
               <div className="flex flex-col sm:flex-row gap-3">
-
                 <label className="flex flex-col w-full sm:w-1/2 items-center sm:items-start">
                   <span className="label-text font-semibold">📅 Fecha</span>
                   <input
@@ -140,79 +138,31 @@ export default function PostForm({ onSubmit }) {
                     ))}
                   </select>
                 </label>
-
               </div>
 
-              {/* Sección imagen rediseñada */}
               <div className='flex flex-col gap-3 items-center md:items-start'>
-                <span className="label-text font-semibold">🖼 Imagen</span>
-                {/* Área de preview */}
-                <div
-                  className={`flex flex-col w-60 md:max-w-full relative rounded-xl bg-base-100 overflow-hidden transition-all
-                    ${previewUrl
-                      ? 'border border-base-300 cursor-default'
-                      : 'border-2 border-dashed border-base-300 hover:border-primary/40 cursor-pointer'
-                    }`}
-                  onClick={() => !previewUrl && fileInputRef.current?.click()}
-                >
-                  {previewUrl ? (
-                    <div className="flex flex-col items-center">
-                      <img
-                        src={previewUrl}
-                        alt="Vista previa"
-                        className="w-full max-h-48 object-contain p-2"
-                      />
-                      {/* Nombre del archivo seleccionado */}
-                      {formData.imagen && (
-                        <p className="text-xs text-base-content/50 overflow-hidden whitespace-nowrap text-ellipsis max-w-44">
-                          {formData.imagen.name}
-                        </p>
-                      )}
-                      {/* Botones de acción cuando hay imagen */}
-                      {formData.imagen && (
-                        <div className="flex gap-2 justify-center py-2">
-                          <label className="btn btn-outline btn-sm cursor-pointer">
-                            Cambiar imagen
-                            <input
-                              ref={changeInputRef}
-                              type="file"
-                              accept="image/*"
-                              onChange={handleFileChange}
-                              className="hidden"
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleRemoveImage}
-                            className="btn btn-error btn-sm"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      )}
+                {imagePreviewUrl && !formData.imagen ? (
+                  <div className='w-full rounded-xl border border-base-300 overflow-hidden bg-base-100'>
+                    <img src={imagePreviewUrl} alt='Imagen sugerida' className='w-full object-cover max-h-60' />
+                    <div className='p-3 text-sm'>
+                      Imagen cargada desde Meta. Puedes cambiarla o eliminarla antes de crear.
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 py-8 text-base-content/40">
-                      <PiImageSquare className="size-8" />
-                      <p className="text-sm">Haz clic para subir una imagen</p>
-                      <p className="text-xs">JPG, PNG · máx. 5 MB</p>
+                    <div className='flex gap-2 p-3'>
+                      <button type='button' className='btn btn-outline btn-sm' onClick={handleRemoveImage}>
+                        Eliminar imagen
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
-                {/* Input file oculto (para el placeholder clickeable) */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  aria-label="Subir imagen"
+                <ImageUploadPreview
+                  image={formData.imagen}
+                  onChange={handleImageChange}
+                  label="🖼 Imagen"
                 />
               </div>
             </div>
 
-            {/* Columna derecha: contenido */}
             <div className="md:col-span-2 flex flex-col gap-4">
               <label className="block w-full">
                 <span className="label-text font-semibold">📝 Contenido</span>
@@ -232,7 +182,6 @@ export default function PostForm({ onSubmit }) {
             </div>
           </div>
 
-          {/* Acciones */}
           <div className="mt-6 flex flex-col md:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-sm text-base-content/50">
               <p className='max-w-sm'>
@@ -248,7 +197,6 @@ export default function PostForm({ onSubmit }) {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </form>

@@ -1,19 +1,14 @@
-export const formatFecha = (fecha) => {
-  if (!fecha) return 'Sin fecha'
-
-  const date = new Date(fecha)
-
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const year = date.getFullYear()
-
-  return `${month}-${day}-${year}`
-}
+export const DEFAULT_TIPO_FORMATO = 'Comparación visual ⚖️'
 
 export const tiposFormato = [
+  DEFAULT_TIPO_FORMATO,
   'Descubre el error 🔎',
   'Dato sorprendente 🤯',
   'Comparación ⚖️',
+  'Meme clásico 😂',
   'Situación relatable 😅',
+  'Historia en viñetas 🎬',
   'Mini guía 📚',
+  'Ranking 🏆',
+  'Tweet/Quote card 💬',
 ]

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatDateLong } from '../../../utils/date'
 
 const PostModalView = ({ post }) => {
     const [imageError, setImageError] = useState(false)
@@ -85,12 +86,7 @@ const PostModalView = ({ post }) => {
                                         <div className="rounded-xl bg-white/10 backdrop-blur px-3 py-2 border border-white/10">
                                             <p className="text-[11px] uppercase tracking-widest text-white/60">Fecha</p>
                                             <p className="text-sm font-medium">
-                                                {new Date(post['Fecha de publicación'] + 'T00:00:00').toLocaleDateString('es-ES', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
+                                                {formatDateLong(post['Fecha de publicación'])}
                                             </p>
                                         </div>
                                     )}

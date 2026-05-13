@@ -1,12 +1,73 @@
 import { Router } from 'express';
 import fs from 'fs-extra';
 import path from 'path';
+import { URL } from 'url';
 import { upload } from '../middleware/upload.js';
 import { getPostPaths } from '../utils/paths.js';
 import { parseMD, generarMarkdown, limpiarImagen } from '../utils/markdown.js';
 import { logInfo, logWarn, logError } from '../utils/logger.js';
 
 const router = Router();
+
+const META_API_VERSION = process.env.META_API_VERSION || 'v17.0';
+const META_PAGE_ID = process.env.META_PAGE_ID;
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+
+const getImageFromAttachments = (attachments) => {
+  if (!attachments) return null;
+
+  for (const attachment of attachments) {
+    if (!attachment) continue;
+    if (attachment.media?.image?.src) {
+      return attachment.media.image.src;
+    }
+    if (attachment.media?.image?.url) {
+      return attachment.media.image.url;
+    }
+    if (attachment.url) {
+      return attachment.url;
+    }
+    if (attachment.subattachments?.data) {
+      const nested = getImageFromAttachments(attachment.subattachments.data);
+      if (nested) return nested;
+    }
+    if (attachment.media?.image) {
+      return attachment.media.image;
+    }
+  }
+
+  return null;
+}
+
+const getExtensionFromUrl = (imageUrl, defaultExt = '.jpg') => {
+  try {
+    const parsed = new URL(imageUrl)
+    const ext = path.extname(parsed.pathname)
+    return ext || defaultExt
+  } catch {
+    return defaultExt
+  }
+}
+
+const saveRemoteImage = async (imageUrl, imageFolder, imageName) => {
+  if (!imageUrl) return null;
+
+  const ext = getExtensionFromUrl(imageUrl)
+  const finalFileName = `${imageName}${ext}`
+  const finalPath = path.join(imageFolder, finalFileName)
+
+  await fs.ensureDir(imageFolder)
+
+  const response = await fetch(imageUrl)
+  if (!response.ok) {
+    throw new Error(`No se pudo descargar la imagen remota: ${response.statusText}`)
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer())
+  await fs.writeFile(finalPath, buffer)
+
+  return finalFileName
+}
 
 // ================== GET POSTS ==================
 router.get('/', async (req, res) => {
@@ -66,10 +127,66 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ================== CARGAR META ==================
+router.post('/meta', async (req, res) => {
+  try {
+    if (!META_PAGE_ID || !META_ACCESS_TOKEN) {
+      const msg = 'Meta API no está configurada. Define META_PAGE_ID y META_ACCESS_TOKEN.'
+      logWarn(msg)
+      return res.status(500).json({ error: msg })
+    }
+
+    logInfo(`Consultando Meta API para Page ID: ${META_PAGE_ID}`)
+    const { query = '' } = req.body;
+    const graphUrl = `https://graph.facebook.com/${META_API_VERSION}/${META_PAGE_ID}/feed?fields=message,created_time,attachments{media,type,url,subattachments}&limit=20&access_token=${encodeURIComponent(META_ACCESS_TOKEN)}`;
+    logInfo(`URL de consulta: ${graphUrl.replace(META_ACCESS_TOKEN, '[TOKEN_OCULTO]')}`)
+
+    const response = await fetch(graphUrl);
+
+    if (!response.ok) {
+      const text = await response.text();
+      logError(`Respuesta de Meta API: ${response.status} - ${text}`)
+      throw new Error(`Error de Meta API: ${response.status} ${text}`);
+    }
+
+    const result = await response.json();
+    logInfo(`Respuesta exitosa de Meta API. Posts encontrados: ${result.data?.length || 0}`)
+    const feed = Array.isArray(result.data) ? result.data : [];
+    const normalizedQuery = String(query || '').trim().toLowerCase();
+
+    let metaPost = null;
+    if (normalizedQuery) {
+      metaPost = feed.find((item) => item.message && item.message.toLowerCase().includes(normalizedQuery));
+      logInfo(`Buscando post con query "${normalizedQuery}": ${metaPost ? 'Encontrado' : 'No encontrado'}`)
+    }
+    if (!metaPost) {
+      metaPost = feed[0];
+      logInfo('Usando el post más reciente')
+    }
+
+    if (!metaPost) {
+      logInfo('No hay posts disponibles en Meta. Devolviendo datos vacíos para entrada manual.');
+      return res.json({ contenido: '', fecha: new Date().toISOString().slice(0, 10), imageUrl: null });
+    }
+
+    const contenido = metaPost.message || '';
+    const createdTime = metaPost.created_time || new Date().toISOString();
+    const fecha = createdTime.slice(0, 10);
+    const imageUrl = getImageFromAttachments(metaPost.attachments?.data) || null;
+
+    logInfo(`Post seleccionado: Fecha ${fecha}, Contenido: ${contenido.substring(0, 50)}..., Imagen: ${imageUrl ? 'Sí' : 'No'}`)
+    res.json({ contenido, fecha, imageUrl });
+  } catch (error) {
+    logError(`Error al cargar Meta: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // ================== CREAR POST ==================
 router.post('/', upload.single('imagen'), async (req, res) => {
   try {
-    const { titulo, fecha, tipo, contenido } = req.body;
+    const { titulo, fecha, tipo, contenido, imagenUrl } = req.body;
 
     if (!fecha) {
       logWarn('Intento de crear post sin fecha');
@@ -92,7 +209,7 @@ router.post('/', upload.single('imagen'), async (req, res) => {
 
     const { fileName, filePath, imageFolder, imageName } = getPostPaths(fecha, sufijo === 0 ? '' : sufijo)
 
-    const imagen = req.file ? req.file.filename : null;
+    let imagen = req.file ? req.file.filename : null;
 
     // Mover imagen con nombre correcto si existe
     if (req.file) {
@@ -104,12 +221,15 @@ router.post('/', upload.single('imagen'), async (req, res) => {
       if (rutaSubida !== rutaDestino) {
         await fs.move(rutaSubida, rutaDestino, { overwrite: false })
       }
+      imagen = nombreCanonico
+    } else if (imagenUrl) {
+      imagen = await saveRemoteImage(imagenUrl, imageFolder, imageName)
     }
 
     const frontmatter = {
       'Tipo de formato': tipo || '',
       'Fecha de publicación': fecha,
-      'Imagen del post': imagen ? `[[${imageName}${path.extname(imagen)}]]` : '',
+      'Imagen del post': imagen ? `[[${imagen}]]` : '',
       'Publicado': false
     };
 
@@ -148,8 +268,14 @@ router.put('/:id', upload.single('imagen'), async (req, res) => {
 
     // ── Calcular sufijo para las rutas nuevas ────────────────────────────────
     // Extraer sufijo del id original: "Post 27 abril 2026 1" → 1, "Post 27 abril 2026" → ''
-    const matchSufijo = idOriginal.match(/\s(\d+)$/)
-    const sufijoOriginal = matchSufijo ? Number(matchSufijo[1]) : ''
+    // El nombre base generado por getPostPaths no lleva sufijo; lo calculamos comparando.
+    const { fileName: fileNameBase } = getPostPaths(fechaOriginal)
+    const baseNameSinExt = fileNameBase.replace('.md', '')  // "Post 27 abril 2026"
+    // El sufijo es lo que queda después del nombre base (ej: " 1", " 2"); si coinciden exactamente, no hay sufijo.
+    const restante = idOriginal.startsWith(baseNameSinExt)
+      ? idOriginal.slice(baseNameSinExt.length).trim()
+      : ''
+    const sufijoOriginal = restante !== '' && /^\d+$/.test(restante) ? Number(restante) : ''
 
     let sufijo = sufijoOriginal  // por defecto conservar el sufijo
 
