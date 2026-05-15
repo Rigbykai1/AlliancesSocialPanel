@@ -1,6 +1,6 @@
 # Ignorar archivos de configuración local
 /backend/.env
-
+/AlliancesTech
 # Ignorar dependencias instaladas
 /backend/node_modules/
 /frontend/node_modules/

@@ -1,16 +1,103 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useNotifications } from '../../../hooks/useNotifications'
 import { formatDateLong } from '../../../utils/date'
+
+const splitPostText = (text) => {
+    if (!text) return { texto: '', diseno: '' }
+
+    const normalized = text.replace(/\r\n/g, '\n')
+
+    // Buscar marcadores
+    const textoRegex = /(\n|^)📌\s*Texto\s*del\s*post\s*:?/i
+    const disenoRegex = /(\n|^)🎨\s*Diseñ[ao]\s*IA\s*:?/i
+
+    const textoMatch = normalized.match(textoRegex)
+    const disenoMatch = normalized.match(disenoRegex)
+
+    let texto = ''
+    let diseno = ''
+
+    if (textoMatch && disenoMatch) {
+        // Ambos marcadores presentes
+        const textoStart = textoMatch.index + textoMatch[0].length
+        const disenoStart = disenoMatch.index
+        texto = normalized.slice(textoStart, disenoStart).trim()
+        diseno = normalized.slice(disenoStart).trim()
+    } else if (textoMatch) {
+        // Solo marcador de texto
+        const textoStart = textoMatch.index + textoMatch[0].length
+        texto = normalized.slice(textoStart).trim()
+        diseno = ''
+    } else if (disenoMatch) {
+        // Solo marcador de diseño
+        const disenoStart = disenoMatch.index
+        texto = normalized.slice(0, disenoStart).trim()
+        diseno = normalized.slice(disenoStart).trim()
+    } else {
+        // Ningún marcador
+        texto = normalized.trim()
+        diseno = ''
+    }
+
+    return { texto, diseno }
+}
 
 const PostModalView = ({ post }) => {
     const [imageError, setImageError] = useState(false)
+    const { notifyError } = useNotifications()
     const imageSrc = post.imageUrl || null
+
+    const rawContent = (post.contenido || post.preview || post['Contenido'] || '').trim()
+    const { texto, diseno } = useMemo(() => splitPostText(rawContent), [rawContent])
+    const fullContent = useMemo(() => {
+        if (!texto && !diseno) return rawContent
+        if (texto && diseno) return `${texto}\n\n${diseno}`.trim()
+        return texto || diseno || rawContent
+    }, [rawContent, texto, diseno])
+
+    const copyToClipboard = async (value, label) => {
+        if (!value) {
+            notifyError(`No hay ${label.toLowerCase()} para copiar.`)
+            return
+        }
+        try {
+            await navigator.clipboard.writeText(value)
+            notifySuccess(`${label} copiado correctamente`)
+        } catch (err) {
+            notifyError(`Error al copiar ${label}`)
+        }
+    }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 border-b border-base-300 pb-4">
+            <div className="flex flex-col gap-3 border-b border-base-300 pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold">Vista del post</h1>
                     <p className="text-sm text-base-content/60">Revisa el contenido antes de editar o eliminar.</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline"
+                        onClick={() => copyToClipboard(texto || rawContent, 'Texto del post')}
+                    >
+                        Copiar texto del post
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline"
+                        onClick={() => copyToClipboard(diseno || rawContent, 'Diseño IA')}
+                    >
+                        Copiar diseño IA
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => copyToClipboard(fullContent, 'Texto completo')}
+                    >
+                        Copiar todo
+                    </button>
                 </div>
             </div>
 

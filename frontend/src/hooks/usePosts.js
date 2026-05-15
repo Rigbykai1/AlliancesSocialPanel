@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { postsApi } from '../services/api'
 import { formatDateLabel } from '../utils/date'
+import { useApi } from './useApi'
 
 const getIndicePorFecha = (posts, fecha, excludeId = null) => {
   return posts.filter(p => {
@@ -14,49 +15,19 @@ const getIndicePorFecha = (posts, fecha, excludeId = null) => {
 // ─────────────────────────────────────────────
 export const usePosts = (onError) => {
   const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const { loading, error, setError, execute } = useApi({ onError })
 
-  const cargarPosts = async () => {
-    setLoading(true)
-    setError(null)
-    try {
+  const cargarPosts = useCallback(async () => {
+    return execute(async () => {
       const response = await postsApi.getAll()
       setPosts(response.data)
-    } catch (err) {
-      const msg = 'Error al cargar los posts: ' + err.message
-      setError(msg)
-      onError?.(msg)
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
+      return response
+    })
+  }, [execute])
 
   useEffect(() => {
-    let cancelled = false
-
-    const load = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await postsApi.getAll()
-        if (!cancelled) setPosts(response.data)
-      } catch (err) {
-        if (!cancelled) {
-          const msg = 'Error al cargar los posts: ' + err.message
-          setError(msg)
-          onError?.(msg)
-          console.error(err)
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [])
+    cargarPosts()
+  }, [cargarPosts])
 
   return { posts, loading, error, cargarPosts, setError }
 }

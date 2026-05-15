@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNotifications } from '../../../hooks/useNotifications'
+import Modal from '../../UI/Modal'
 import PostModalView from './PostModalView'
 import PostModalEdit from './PostModalEdit'
 import PostModalDeleteConfirm from './PostModalDeleteConfirm'
@@ -17,8 +18,6 @@ const PostModal = ({ post, onClose, onDelete, onUpdate, onTogglePublished }) => 
 
     useEffect(() => {
         if (!post) return
-        const dialog = document.getElementById('my_modal_2')
-        if (dialog && !dialog.open) dialog.showModal()
 
         const initialFields = {
             nombre: post.nombre || "",
@@ -73,26 +72,24 @@ const PostModal = ({ post, onClose, onDelete, onUpdate, onTogglePublished }) => 
     }
 
     return (
-        <dialog id="my_modal_2" className="modal px-3 sm:px-4" onClose={onClose}>
-            <div className="modal-box w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-base-300 bg-base-100 shadow-2xl">
-                {renderContent()}
-                <div className="modal-action mt-6 border-t border-base-300 pt-5">
-                    <PostModalActions
-                        isEditing={isEditing}
-                        isConfirmingDelete={isConfirmingDelete}
-                        onEdit={() => setIsEditing(true)}
-                        onCancelEdit={() => setIsEditing(false)}
-                        onSave={handleSave}
-                        onDelete={() => setIsConfirmingDelete(true)}
-                        onCancelDelete={() => setIsConfirmingDelete(false)}
-                        onConfirmDelete={handleConfirmDelete}
-                        onClose={onClose}
-                        onTogglePublished={onTogglePublished}
-                        post={post}
-                    />
-                </div>
+        <Modal isOpen={Boolean(post)} onClose={onClose}>
+            {renderContent()}
+            <div className="modal-action mt-6 border-t border-base-300 pt-5">
+                <PostModalActions
+                    isEditing={isEditing}
+                    isConfirmingDelete={isConfirmingDelete}
+                    onEdit={() => setIsEditing(true)}
+                    onCancelEdit={() => setIsEditing(false)}
+                    onSave={handleSave}
+                    onDelete={() => setIsConfirmingDelete(true)}
+                    onCancelDelete={() => setIsConfirmingDelete(false)}
+                    onConfirmDelete={handleConfirmDelete}
+                    onClose={onClose}
+                    onTogglePublished={onTogglePublished}
+                    post={post}
+                />
             </div>
-        </dialog>
+        </Modal>
     )
 }
 
