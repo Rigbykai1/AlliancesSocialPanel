@@ -1,10 +1,10 @@
 import React from 'react'
-import { PiNotePencil, PiCheckCircle } from 'react-icons/pi'
+import { PiNotePencil, PiCheckCircle, PiX, PiFloppyDisk } from 'react-icons/pi'
 import { tiposFormato } from '../../../utils/helpers'
 import { formatDateLabel } from '../../../utils/date'
 import ImageUploadPreview from '../../UI/ImageUploadPreview'
 
-const PostModalEdit = ({ fields, onChange, postNombre }) => {
+const PostModalEdit = ({ fields, onChange, postNombre, isEditing, onSave, onCancelEdit }) => {
     const { fecha, tipo, publicado, contenido, imagen } = fields
 
     const set = (key) => (e) => {
@@ -35,11 +35,28 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3 border-b border-base-300 pb-4">
+            <div className="flex items-center justify-between gap-3 p-4 sticky top-0 bg-base-300/50 backdrop-blur z-10 rounded-box">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold">Editar post</h1>
                     <p className="text-sm text-base-content/60">Modifica los datos del contenido seleccionado.</p>
                 </div>
+                {
+                    isEditing ? (
+                        <div className="flex gap-3">
+                            <div className="tooltip tooltip-left" data-tip="Cancelar edición">
+                                <button className="btn btn-outline" onClick={onCancelEdit}>
+                                    <PiX />
+                                </button>
+                            </div>
+                            <div className="tooltip tooltip-left" data-tip="Guardar cambios">
+
+                                <button className="btn btn-success" onClick={onSave}>
+                                    <PiFloppyDisk />
+                                </button>
+                            </div>
+                        </div>
+                    ) : null
+                }
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -83,14 +100,14 @@ const PostModalEdit = ({ fields, onChange, postNombre }) => {
                             </label>
 
                             <label className="label cursor-pointer justify-start gap-3 rounded-xl border border-base-300 bg-base-100 px-4 py-3 w-full">
-                                <input  
+                                <input
                                     type="checkbox"
                                     className="checkbox checkbox-primary"
                                     checked={!!publicado}
                                     onChange={handlePublicado}
                                 />
                                 <span className="label-text font-medium">
-                                    Publicado {publicado ? '✅' : '⬜'}
+                                    Publicado {publicado}
                                 </span>
                             </label>
                         </div>

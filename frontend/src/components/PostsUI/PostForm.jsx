@@ -15,7 +15,6 @@ export default function PostForm({ onSubmit, initialFecha, initialContenido = ''
     imagenUrl: initialImageUrl
   })
   const [imagePreviewUrl, setImagePreviewUrl] = useState(initialImageUrl || null)
-  const [cargando, setCargando] = useState(false)
   const { notifySuccess, notifyError } = useNotifications()
 
   useEffect(() => {

@@ -13,10 +13,10 @@ export default function DrawerSidebar({ totalPosts, onNavigate }) {
   }
 
   return (
-    <div className="drawer-side"> 
+    <div className="drawer-side">
       <label htmlFor={DRAWER_ID} className="drawer-overlay" />
       <div className="flex h-[80%] w-64 flex-col items-center 
-                      bg-base-200 p-4 
+                      bg-base-300/50 backdrop-blur p-4 
                       rounded-box shadow-lg ml-3 mt-23">
         <div className="mb-4 font-bold text-lg">Navegación</div>
         <ul className="menu w-full">

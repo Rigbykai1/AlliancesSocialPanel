@@ -5,7 +5,7 @@ import { ThemeSelector } from "./ThemeSelector";
 const NavBar = ({ onNavigate }) => {
     return (
         <nav className="navbar fixed top-4 left-1/2 -translate-x-1/2 
-                bg-base-200 rounded-box shadow-lg px-3 z-50 w-[calc(100%-1rem)]">
+                bg-base-300/50 backdrop-blur rounded-box shadow-lg px-3 z-50 w-[calc(100%-1rem)]">
             <div className="navbar-start">
                 <label
                     htmlFor="my-drawer-4"

@@ -67,7 +67,7 @@ const PostModal = ({ post, onClose, onDelete, onUpdate, onTogglePublished }) => 
         if (isConfirmingDelete)
             return <PostModalDeleteConfirm postName={post.nombre} />
         if (isEditing)
-            return <PostModalEdit fields={fields} onChange={setFields} postNombre={post.nombre} />
+            return <PostModalEdit fields={fields} onChange={setFields} postNombre={post.nombre} isEditing={isEditing} onSave={handleSave} onCancelEdit={() => setIsEditing(false)} />
         return <PostModalView post={post} />
     }
 
@@ -77,10 +77,8 @@ const PostModal = ({ post, onClose, onDelete, onUpdate, onTogglePublished }) => 
             <div className="modal-action mt-6 border-t border-base-300 pt-5">
                 <PostModalActions
                     isEditing={isEditing}
-                    isConfirmingDelete={isConfirmingDelete}
                     onEdit={() => setIsEditing(true)}
-                    onCancelEdit={() => setIsEditing(false)}
-                    onSave={handleSave}
+                    isConfirmingDelete={isConfirmingDelete}
                     onDelete={() => setIsConfirmingDelete(true)}
                     onCancelDelete={() => setIsConfirmingDelete(false)}
                     onConfirmDelete={handleConfirmDelete}
